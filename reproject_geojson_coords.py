@@ -64,9 +64,8 @@ def reproject_geojson_coords(source_epsg_code: int, dest_epsg_code: int, geojson
                         point[0] = transformed_point[0]
                         point[1] = transformed_point[1]
 
-    # write transformed geojson to a new file
-    with open("transformed_geojson.geojson", "w") as outfile:
-        outfile.write(json.dumps(geojson))
+    # convert back to geojson
+    return json.dumps(geojson)
 
 
 # converts all features in a geojson from multiline strings to polygons by using shapely buffer
@@ -91,16 +90,15 @@ def buffer_multilinestr_to_polygon(geojson, buffer_size: int):
         # overwrite existing multiline string feature geometry with new polygon feature geometry
         geojson["features"][i]["geometry"] = buffered_feature
 
-    # write transformed geojson to a new file
-    with open("buffered_geojson.geojson", "w") as outfile:
-        outfile.write(json.dumps(geojson))
+    # call json.dumps to convert all the tuples back into geojson valid format
+    return json.dumps(geojson)
 
 
 if __name__ == "__main__":
 
-    # REPROJECT
+    # TRANSFORMS INPUT GEOJSON BY BUFFERING, THEN REPROJECTING
     # EDIT THESE VARIABLES TO MAKE THE SCRIPT DO WHAT YOU WANT
-    file_path = r"D:\Software Projects\Multiviz Internship\Misc GeoJSON Files\buffered_geojson.geojson"
+    file_path = r"D:\Software Projects\Multiviz Internship\Misc GeoJSON Files\liveability_sa1_2011_difference.geojson"
     source_epsg_code = 7845
     dest_epsg_code = 4236
 
@@ -108,18 +106,18 @@ if __name__ == "__main__":
     with open(file_path, "r") as infile:
         geojson = json.load(infile)
 
-    # reproject from ... to ..., writes to a new geojson file with the new projection
-    reproject_geojson_coords(source_epsg_code, dest_epsg_code, geojson)
+    # buffer the geojson
+    geojson = buffer_multilinestr_to_polygon(geojson, 1)
 
-    # BUFFER
-    # EDIT THESE VARIABLES TO MAKE THE SCRIPT DO WHAT YOU WANT
-    # file_path = r"D:\Software Projects\Multiviz Internship\Misc GeoJSON Files\liveability_sa1_2011_difference.geojson"
-    #
-    # # load geojson from file
-    # with open(file_path, "r") as infile:
-    #     geojson = json.load(infile)
-    #
-    # buffer_multilinestr_to_polygon(geojson, 1)
+    # convert buffered geojson back to python dict
+    geojson = json.loads(geojson)
+
+    # reproject from ... to ...
+    geojson = reproject_geojson_coords(source_epsg_code, dest_epsg_code, geojson)
+
+    # write transformed geojson to a new file
+    with open("transformed_geojson.geojson", "w") as outfile:
+        outfile.write(geojson)
 
 
 
