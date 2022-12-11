@@ -73,42 +73,23 @@ def reproject_geojson_coords(source_epsg_code: int, dest_epsg_code: int, geojson
 def buffer_multilinestr_to_polygon(geojson, buffer_size: int):
     # iterate over features
     num_features = len(geojson["features"])
-    print(num_features)
-    for i in range(num_features):
-        print(f"iteration: {i}")
 
-        start_time = time.time()
+    for i in range(num_features):
         feature = geojson["features"][i]
-        end_time = time.time()
-        print(f"feature access took time: {end_time - start_time}")
 
         # each feature should be a multiline string, so we want to create a shapely multiline string using its coords
-        start_time = time.time()
         multiline_str = multilinestring.MultiLineString(feature["geometry"]["coordinates"])
-        end_time = time.time()
-        print(f"shapely multiline took time: {end_time - start_time}")
 
         # apply buffer to turn each feature into a polygon and map it into geojson geometry form
-        start_time = time.time()
         # cap_style: 1 = round, 2 = flat, 3 = square
         # join_style: 1 = round, 2 = mitre, 3 = bevel
         # TODO: figure out the best cap/join style. round cap + join gives best looking lines but costs the most
         # cap 2 join 3 is quite cheap, doesn't look amazing tho
         buffered_feature = multiline_str.buffer(buffer_size, cap_style=2, join_style=3)
-        end_time = time.time()
-        print(f"buffer took time: {end_time - start_time}")
-
-        start_time = time.time()
         buffered_feature = mapping(buffered_feature)
-        end_time = time.time()
-        print(f"mapping took time: {end_time - start_time}")
 
         # overwrite existing multiline string feature geometry with new polygon feature geometry
-        start_time = time.time()
         geojson["features"][i]["geometry"] = buffered_feature
-        end_time = time.time()
-        print(f"overwrite took time: {end_time - start_time}")
-
 
     # write transformed geojson to a new file
     with open("buffered_geojson.geojson", "w") as outfile:
@@ -139,8 +120,6 @@ if __name__ == "__main__":
     #     geojson = json.load(infile)
     #
     # buffer_multilinestr_to_polygon(geojson, 1)
-    # # # print(geojson["features"][1384])
-    # # # print(geojson["features"][1385])
 
 
 
